@@ -260,8 +260,3 @@ class _VideoAppState extends State<VideoApp> {
   }
 }
 
-        ),
-      ),
-    );
-  }
-}
