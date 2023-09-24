@@ -26,17 +26,18 @@ class HomePage extends StatefulWidget {
   _HomePage createState() => _HomePage();
 }
 
-//Manejar cambios de estado en pantalla
 class _HomePage extends State<HomePage> {
-
   bool checked = false;
+
+  TextEditingController emailController = TextEditingController();
+  TextEditingController passwordController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
     return loginPage();
   }
 
-  Widget loginPage(){
+  Widget loginPage() {
     Color color = const Color.fromARGB(255, 157, 8, 184);
     return Scaffold(
       body: Center(
@@ -44,23 +45,25 @@ class _HomePage extends State<HomePage> {
           crossAxisAlignment: CrossAxisAlignment.center,
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: <Widget>[
-            //Título y subtítulo
             Container(
               child: const Column(
                 children: <Widget>[
-                  Text('Crime Detections',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 50
-                  )),
-                  Text('IoT Engine Team',
-                  style: TextStyle(
-                    fontSize: 30,
-                  )),
+                  Text(
+                    'Crime Detections',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 50,
+                    ),
+                  ),
+                  Text(
+                    'IoT Engine Team',
+                    style: TextStyle(
+                      fontSize: 30,
+                    ),
+                  ),
                 ],
               ),
             ),
-            //const Padding(padding: EdgeInsets.all(15)),
             Container(
               decoration: BoxDecoration(
                 color: Colors.grey[200],
@@ -75,28 +78,33 @@ class _HomePage extends State<HomePage> {
                 children: <Widget>[
                   const Padding(
                     padding: EdgeInsets.only(bottom: 15),
-                    child: Text('Inicio de Sesión',
-                          style: TextStyle(fontSize: 25, fontWeight: FontWeight.bold),
-                  )),
-                  //Correo electrónico
+                    child: Text(
+                      'Inicio de Sesión',
+                      style: TextStyle(fontSize: 25, fontWeight: FontWeight.bold),
+                    ),
+                  ),
                   const Padding(
                     padding: EdgeInsets.only(bottom: 20),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('Correo Electrónico',),
-                        TextField()
+                        Text('Correo Electrónico'),
+                        TextField(
+                          controller: emailController,
+                        ),
                       ],
                     ),
                   ),
-                  //Contraseña
                   const Padding(
                     padding: EdgeInsets.only(bottom: 15),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text('Contraseña'),
-                        TextField(obscureText: true)
+                        TextField(
+                          controller: passwordController,
+                          obscureText: true,
+                        ),
                       ],
                     ),
                   ),
@@ -108,30 +116,35 @@ class _HomePage extends State<HomePage> {
                           Checkbox(
                             value: checked,
                             activeColor: color,
-                            onChanged: (value) => _changed(value!)),
-                          const Text('Recuérdame'),
+                            onChanged: (value) => _changed(value!),
+                          ),
+                          Text('Recuérdame'),
                         ],
                       ),
                       TextButton(
                         onPressed: null,
-                        child: Text('Olvidé mi contraseña',
-                        style: TextStyle(color: color),)),
+                        child: Text(
+                          'Olvidé mi contraseña',
+                          style: TextStyle(color: color),
+                        ),
+                      ),
                     ],
                   ),
                   Padding(
                     padding: const EdgeInsets.only(top: 30),
                     child: Center(
-                    child: OutlinedButton(
-                      style: OutlinedButton.styleFrom(
-                        backgroundColor: color
-                      ),
-                      onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (context) => VideoApp())),
-                      child: const Text('Iniciar Sesión',
-                        style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)
+                      child: OutlinedButton(
+                        style: OutlinedButton.styleFrom(
+                          backgroundColor: color,
+                        ),
+                        onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (context) => VideoApp())),
+                        child: const Text(
+                          'Iniciar Sesión',
+                          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+                        ),
                       ),
                     ),
                   ),
-                    ),
                 ],
               ),
             ),
@@ -141,12 +154,11 @@ class _HomePage extends State<HomePage> {
     );
   }
 
-  void _changed(bool state){
+  void _changed(bool state) {
     setState(() {
       checked = state;
     });
   }
-
 }
 
 class VideoApp extends StatefulWidget {
@@ -166,7 +178,6 @@ class _VideoAppState extends State<VideoApp> {
   void initState() {
     _controller = VideoPlayerController.network(
         'https://flutter.github.io/assets-for-api-docs/assets/videos/butterfly.mp4');
-        //'assets/videos/testVideo.mp4');
     _initializeVideoPlayerFuture = _controller.initialize();
     _controller.setLooping(true);
     _controller.setVolume(0.2);
@@ -215,22 +226,21 @@ class _VideoAppState extends State<VideoApp> {
             ),
             const Padding(padding: EdgeInsets.all(15)),
             const Text('Eventos Detectados',
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 25
-              )
-            ),
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 25,
+                )),
             Flexible(
               child: ListView.builder(
                 shrinkWrap: true,
                 itemCount: list.length,
-                itemBuilder:(context, index) {
+                itemBuilder: (context, index) {
                   final item = list[index];
                   return ListTile(
                     title: Text(item),
                   );
                 },
-                ),
+              ),
             )
           ],
         ),
@@ -244,6 +254,12 @@ class _VideoAppState extends State<VideoApp> {
           child: Icon(
             _controller.value.isPlaying ? Icons.pause : Icons.play_arrow,
           ),
+        ),
+      ),
+    );
+  }
+}
+
         ),
       ),
     );
