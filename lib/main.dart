@@ -3,11 +3,13 @@ import 'pages/login_page.dart';
 import 'pages/video_page.dart';
 
 void main() {
-  runApp(App());
+  runApp(const App());
 }
 
 class App extends StatelessWidget {
   static const _title = 'Crime Detections | Login';
+
+  const App({super.key});
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -26,7 +28,7 @@ class App extends StatelessWidget {
         routes: <String, WidgetBuilder>{
           LoginPage.routName: (BuildContext context) => const LoginPage(),
           VideoApp.routName: (BuildContext context) =>
-              VideoApp(title: 'Dashboard'),
+              const VideoApp(title: 'Dashboard'),
         });
   }
 }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:video_player/video_player.dart';
+import 'package:flutter_vlc_player/flutter_vlc_player.dart';
 
+import '../utils/constants.dart';
 import 'login_page.dart';
 
 class VideoApp extends StatefulWidget {
@@ -8,29 +9,32 @@ class VideoApp extends StatefulWidget {
 
   final String title;
 
-  VideoApp({Key? key, required this.title}) : super(key: key);
+  const VideoApp({Key? key, required this.title}) : super(key: key);
 
   @override
   _VideoAppState createState() => _VideoAppState();
 }
 
 class _VideoAppState extends State<VideoApp> {
-  late VideoPlayerController _controller;
-  late Future<void> _initializeVideoPlayerFuture;
+  late VlcPlayerController _controller;
 
   @override
   void initState() {
-    _controller = VideoPlayerController.network(
-        'https://flutter.github.io/assets-for-api-docs/assets/videos/bee.mp4');
-    _initializeVideoPlayerFuture = _controller.initialize();
-    _controller.setLooping(true);
-    _controller.setVolume(0.2);
+    _controller = VlcPlayerController.network(
+      shouldUsePublicUrls
+          ? VIDEO_STREAMING_URL_PUBLIC
+          : VIDEO_STREAMING_URL_TESTING,
+      hwAcc: HwAcc.full,
+      autoPlay: true,
+      options: VlcPlayerOptions(),
+    );
     super.initState();
   }
 
   @override
-  void dispose() {
-    _controller.dispose();
+  void dispose() async {
+    await _controller.stopRendererScanning();
+    await _controller.dispose();
     super.dispose();
   }
 
@@ -38,6 +42,7 @@ class _VideoAppState extends State<VideoApp> {
   Widget build(BuildContext context) {
     List<String> list = [];
     List.generate(15, (index) => list.add('Evento ${index + 1}'));
+
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.title),
@@ -58,18 +63,14 @@ class _VideoAppState extends State<VideoApp> {
           SizedBox(
             height: MediaQuery.of(context).size.height / 2.5,
             width: MediaQuery.of(context).size.width,
-            child: FutureBuilder(
-              future: _initializeVideoPlayerFuture,
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.done) {
-                  return AspectRatio(
-                    aspectRatio: _controller.value.aspectRatio,
-                    child: VideoPlayer(_controller),
-                  );
-                } else {
-                  return const Center(child: CircularProgressIndicator());
-                }
-              },
+            child: AspectRatio(
+              aspectRatio: _controller.value.aspectRatio,
+              child: VlcPlayer(
+                controller: _controller,
+                aspectRatio: 16 / 9,
+                placeholder: const Center(
+                    child: CircularProgressIndicator(color: Colors.purple)),
+              ),
             ),
           ),
           const Padding(padding: EdgeInsets.all(15)),
@@ -91,18 +92,18 @@ class _VideoAppState extends State<VideoApp> {
           )
         ],
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          setState(() {
-            _controller.value.isPlaying
-                ? _controller.pause()
-                : _controller.play();
-          });
-        },
-        child: Icon(
-          _controller.value.isPlaying ? Icons.pause : Icons.play_arrow,
-        ),
-      ),
+      // floatingActionButton: FloatingActionButton(
+      //   onPressed: () {
+      //     setState(() {
+      //       _controller.value.isPlaying
+      //           ? _controller.pause()
+      //           : _controller.play();
+      //     });
+      //   },
+      //   child: Icon(
+      //     _controller.value.isPlaying ? Icons.pause : Icons.play_arrow,
+      //   ),
+      // ),
     );
   }
 }

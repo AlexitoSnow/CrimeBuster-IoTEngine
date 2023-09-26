@@ -119,12 +119,12 @@ class _HomePage extends State<LoginPage> {
                                   child: const Text('Recuérdame'))
                             ],
                           ),
-                          const TextButton(
-                            onPressed: null,
-                            child: Text(
-                              'Olvidé mi contraseña',
-                            ),
-                          ),
+                          // const TextButton(
+                          //   onPressed: null,
+                          //   child: Text(
+                          //     'Olvidé mi contraseña',
+                          //   ),
+                          // ),
                         ],
                       ),
                       Padding(
