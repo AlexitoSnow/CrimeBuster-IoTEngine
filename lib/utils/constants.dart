@@ -1,4 +1,4 @@
-bool shouldUsePublicUrls = false;
+bool shouldUsePublicUrls = true;
 
 String API_URL_PUBLIC = "http://129.213.126.219:8000/api/";
 String API_URL_TESTING = "http://192.168.1.71:8000/api/";

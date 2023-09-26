@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:core';
 import 'dart:io';
 import 'package:http/http.dart' as http;
@@ -16,7 +17,6 @@ class EventoHttpService {
   Future<List<EventoModel>> getEventos() async {
     Uri uri = Uri.parse("${_baseUrl}evento");
     http.Response response = await http.get(uri);
-
     if (response.statusCode == 200) {
       return eventoModelFromJson(response.body);
     } else {
@@ -25,9 +25,29 @@ class EventoHttpService {
   }
 
   Future<File> getVideoFile(String videoFileName) async {
-    Uri uri = Uri.http("${_baseUrl}video");
-    uri = uri.replace(queryParameters: {"videoFileName": videoFileName});
-    http.Response response = await http.get(uri);
+    var headers = {'Content-Type': 'application/json'};
+    var request = http.Request('GET', Uri.parse('${_baseUrl}video'));
+    request.body = json.encode({"videoFileName": videoFileName});
+    request.headers.addAll(headers);
+
+    http.StreamedResponse response = await request.send();
+
+    if (response.statusCode == 200) {
+      Directory temp = await getTemporaryDirectory();
+      File archivo = File('${temp.path}/$videoFileName');
+      archivo.writeAsBytesSync(await response.stream.toBytes());
+      print(await archivo.length());
+      print(await archivo.path);
+      return archivo;
+    } else {
+      throw http.ClientException(response.statusCode.toString());
+    }
+
+    /*
+    final headers = {HttpHeaders.contentTypeHeader: 'application/json'};
+    final Map<String, String> queryParams = {"videoFileName": videoFileName};
+    final uri = Uri.http(_baseUrl.split("/")[2], "/api/video", queryParams);
+    http.Response response = await http.get(uri, headers: headers);
 
     if (response.statusCode == 200) {
       Directory temp = await getTemporaryDirectory();
@@ -37,5 +57,6 @@ class EventoHttpService {
     } else {
       throw http.ClientException(response.body);
     }
+    */
   }
 }

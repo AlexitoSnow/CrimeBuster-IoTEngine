@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_vlc_player/flutter_vlc_player.dart';
 
+import '../models/EventoModel.dart';
+import '../utils/api_service.dart';
 import '../utils/constants.dart';
 import 'login_page.dart';
 
@@ -17,18 +19,12 @@ class VideoApp extends StatefulWidget {
 
 class _VideoAppState extends State<VideoApp> {
   late VlcPlayerController _controller;
+  late List<EventoModel> _list = [];
 
   @override
   void initState() {
-    _controller = VlcPlayerController.network(
-      shouldUsePublicUrls
-          ? VIDEO_STREAMING_URL_PUBLIC
-          : VIDEO_STREAMING_URL_TESTING,
-      hwAcc: HwAcc.full,
-      autoPlay: true,
-      options: VlcPlayerOptions(),
-    );
     super.initState();
+    getEvents();
   }
 
   @override
@@ -38,11 +34,26 @@ class _VideoAppState extends State<VideoApp> {
     super.dispose();
   }
 
+  void getEvents() async {
+    var temp = await EventoHttpService().getEventos();
+    setState(() {
+      _list = temp;
+    });
+  }
+
+  Future<void> initializePlayer() async {
+    _controller = await VlcPlayerController.network(
+      shouldUsePublicUrls
+          ? VIDEO_STREAMING_URL_PUBLIC
+          : VIDEO_STREAMING_URL_TESTING,
+      hwAcc: HwAcc.full,
+      autoPlay: true,
+      options: VlcPlayerOptions(),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    List<String> list = [];
-    List.generate(15, (index) => list.add('Evento ${index + 1}'));
-
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.title),
@@ -61,49 +72,63 @@ class _VideoAppState extends State<VideoApp> {
         children: [
           const Padding(padding: EdgeInsets.only(top: 15)),
           SizedBox(
-            height: MediaQuery.of(context).size.height / 2.5,
-            width: MediaQuery.of(context).size.width,
-            child: AspectRatio(
-              aspectRatio: _controller.value.aspectRatio,
-              child: VlcPlayer(
-                controller: _controller,
-                aspectRatio: 16 / 9,
-                placeholder: const Center(
-                    child: CircularProgressIndicator(color: Colors.purple)),
-              ),
-            ),
-          ),
+              height: MediaQuery.of(context).size.height / 2.5,
+              width: MediaQuery.of(context).size.width,
+              child: FutureBuilder(
+                  future: initializePlayer(),
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.done) {
+                      print('done');
+                      return AspectRatio(
+                        aspectRatio: _controller.value.aspectRatio,
+                        child: VlcPlayer(
+                          controller: _controller,
+                          aspectRatio: 16 / 9,
+                        ),
+                      );
+                    } else {
+                      return const Center(
+                          child:
+                              CircularProgressIndicator(color: Colors.purple));
+                    }
+                  })),
           const Padding(padding: EdgeInsets.all(15)),
           const Text('Eventos Detectados',
               style: TextStyle(
                 fontWeight: FontWeight.bold,
                 fontSize: 25,
               )),
-          ListView.builder(
-            shrinkWrap: true,
-            itemCount: list.length,
-            itemBuilder: (context, index) {
-              final item = list[index];
-              return ListTile(
-                title: Text(item),
+          for (var item in _list)
+            Tooltip(
+              message: 'Ver Video',
+              child: ListTile(
+                title: Text(item.tipo),
+                subtitle: Text(item.fecha),
                 leading: const Icon(Icons.note),
-              );
-            },
-          )
+                onTap: () async {
+                  var temp = await EventoHttpService()
+                      .getVideoFile(item.videoFileName);
+                  _controller.setMediaFromFile(
+                    temp,
+                    hwAcc: HwAcc.full,
+                    autoPlay: true,
+                  );
+                  /*
+                  var temp = VlcPlayerController.file(
+                      await EventoHttpService()
+                          .getVideoFile(item.videoFileName),
+                      hwAcc: HwAcc.full,
+                      autoPlay: true,
+                      options: VlcPlayerOptions());
+                  setState(() {
+                    _controller = temp;
+                  });
+                  */
+                },
+              ),
+            )
         ],
       ),
-      // floatingActionButton: FloatingActionButton(
-      //   onPressed: () {
-      //     setState(() {
-      //       _controller.value.isPlaying
-      //           ? _controller.pause()
-      //           : _controller.play();
-      //     });
-      //   },
-      //   child: Icon(
-      //     _controller.value.isPlaying ? Icons.pause : Icons.play_arrow,
-      //   ),
-      // ),
     );
   }
 }

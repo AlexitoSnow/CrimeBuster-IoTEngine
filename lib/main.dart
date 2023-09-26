@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'pages/login_page.dart';
 import 'pages/video_page.dart';
 
-void main() {
+void main() async {
   runApp(const App());
 }
 
