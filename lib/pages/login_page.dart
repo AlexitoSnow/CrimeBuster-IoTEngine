@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 
+import '../utils/api_service.dart';
 import 'video_page.dart';
 
 class LoginPage extends StatefulWidget {
   final String? title;
+  static String token = '';
   static const routName = '/login';
 
   const LoginPage({Key? key, this.title}) : super(key: key);
@@ -14,6 +16,7 @@ class LoginPage extends StatefulWidget {
 
 class _HomePage extends State<LoginPage> {
   bool checked = false;
+  bool seePassword = false;
 
   TextEditingController emailController = TextEditingController();
   TextEditingController passwordController = TextEditingController();
@@ -28,23 +31,16 @@ class _HomePage extends State<LoginPage> {
       body: Center(
         child: ListView(
           children: [
-            const Padding(
-              padding: EdgeInsets.only(top: 15, bottom: 30),
-              child: Column(
+            Padding(
+              padding: EdgeInsets.only(top: 30, bottom: 30),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: <Widget>[
-                  Text(
-                    'Crime Detections',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 50,
-                    ),
-                  ),
-                  Text(
-                    'IoT Engine Team',
-                    style: TextStyle(
-                      fontSize: 30,
-                    ),
-                  ),
+                  Image.asset('assets/images/computer.png',
+                      width: 50, height: 50),
+                  Image.asset('assets/images/iconApp.png',
+                      width: 100, height: 50),
+                  Image.asset('assets/images/niot.png', width: 50, height: 50),
                 ],
               ),
             ),
@@ -59,89 +55,9 @@ class _HomePage extends State<LoginPage> {
                   padding: const EdgeInsets.all(15),
                   width: MediaQuery.of(context).size.width * 0.7,
                   child: Column(
-                    mainAxisAlignment: MainAxisAlignment.spaceAround,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: <Widget>[
-                      const Padding(
-                        padding: EdgeInsets.only(bottom: 15),
-                        child: Text(
-                          'Inicio de Sesión',
-                          style: TextStyle(
-                              fontSize: 25, fontWeight: FontWeight.bold),
-                        ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.only(bottom: 20),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            //const Text('Correo Electrónico'),
-                            TextField(
-                              decoration: const InputDecoration(
-                                labelText: 'Correo Electrónico',
-                                border: OutlineInputBorder(),
-                              ),
-                              controller: emailController,
-                            ),
-                          ],
-                        ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.only(bottom: 15),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            //const Text('Contraseña'),
-                            TextField(
-                              decoration: const InputDecoration(
-                                labelText: 'Contraseña',
-                                border: OutlineInputBorder(),
-                              ),
-                              controller: passwordController,
-                              obscureText: true,
-                            ),
-                          ],
-                        ),
-                      ),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: <Widget>[
-                          Row(
-                            children: [
-                              Checkbox(
-                                value: checked,
-                                onChanged: (value) => _changed(value!),
-                              ),
-                              TextButton(
-                                  onPressed: () {
-                                    _changed(!checked);
-                                  },
-                                  child: const Text('Recuérdame'))
-                            ],
-                          ),
-                          // const TextButton(
-                          //   onPressed: null,
-                          //   child: Text(
-                          //     'Olvidé mi contraseña',
-                          //   ),
-                          // ),
-                        ],
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.only(top: 30),
-                        child: Center(
-                          child: OutlinedButton(
-                            onPressed: () =>
-                                Navigator.pushNamed(context, VideoApp.routName),
-                            child: const Text(
-                              'Iniciar Sesión',
-                              style: TextStyle(fontWeight: FontWeight.bold),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: _formulario()),
                 ),
               ],
             ),
@@ -151,9 +67,115 @@ class _HomePage extends State<LoginPage> {
     );
   }
 
-  void _changed(bool state) {
+  List<Widget> _formulario() {
+    return [
+      const Padding(
+        padding: EdgeInsets.only(bottom: 15),
+        child: Text(
+          'Inicio de Sesión',
+          style: TextStyle(fontSize: 25, fontWeight: FontWeight.bold),
+        ),
+      ),
+      Padding(
+        padding: const EdgeInsets.only(bottom: 20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            TextField(
+              decoration: const InputDecoration(
+                labelText: 'Correo Electrónico',
+                border: OutlineInputBorder(),
+                prefixIcon: Icon(Icons.email),
+              ),
+              controller: emailController,
+              keyboardType: TextInputType.emailAddress,
+              autofocus: true,
+            ),
+          ],
+        ),
+      ),
+      Padding(
+        padding: const EdgeInsets.only(bottom: 15),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            TextField(
+              decoration: InputDecoration(
+                labelText: 'Contraseña',
+                border: OutlineInputBorder(),
+                prefixIcon: Icon(Icons.password),
+                suffixIcon: IconButton(
+                    onPressed: _lookAt,
+                    icon: Icon(
+                        seePassword ? Icons.visibility_off : Icons.visibility)),
+              ),
+              controller: passwordController,
+              obscureText: !seePassword,
+              onSubmitted: (_) => _login(),
+            ),
+          ],
+        ),
+      ),
+      Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: <Widget>[
+          Row(
+            children: [
+              Checkbox(
+                value: checked,
+                onChanged: (value) => _rememberme(value!),
+              ),
+              TextButton(
+                  onPressed: () {
+                    _rememberme(!checked);
+                  },
+                  child: const Text('Recuérdame'))
+            ],
+          )
+        ],
+      ),
+      Padding(
+        padding: const EdgeInsets.only(top: 30),
+        child: Center(
+          child: OutlinedButton(
+            onPressed: _login,
+            child: const Text(
+              'Iniciar Sesión',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
+          ),
+        ),
+      ),
+    ];
+  }
+
+  void _rememberme(bool state) {
     setState(() {
       checked = state;
     });
   }
+
+  void _login() async {
+    LoginPage.token = await AuthHttpService().getAPIToken(
+        email: emailController.text, password: passwordController.text);
+    if (LoginPage.token == '') {
+      showDialog(
+          context: context,
+          builder: (BuildContext context) => AlertDialog(
+                title: Text('Error'),
+                content: Text('Credenciales incorrectas'),
+                actions: [
+                  TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: Text('Aceptar'))
+                ],
+              ));
+    } else {
+      Navigator.pushNamed(context, VideoApp.routName);
+    }
+  }
+
+  void _lookAt() => setState(() {
+        seePassword = !seePassword;
+      });
 }
