@@ -23,13 +23,29 @@ class VideoApp extends StatefulWidget {
 }
 
 class _VideoAppState extends State<VideoApp> {
-  late VlcPlayerController _controller;
+  // late VlcPlayerController _controller;
+  final VlcPlayerController _controller = VlcPlayerController.network(
+    shouldUsePublicUrls
+        ? VIDEO_STREAMING_URL_PUBLIC
+        : VIDEO_STREAMING_URL_TESTING,
+    hwAcc: HwAcc.full,
+    autoPlay: true,
+    options: VlcPlayerOptions(),
+  );
+
   late List<EventoModel> _list = [];
   bool playing = false;
 
   @override
   void initState() {
     super.initState();
+    _controller.addListener(() {
+      if (_controller.value.isPlaying != playing) {
+        setState(() {
+          playing = _controller.value.isPlaying;
+        });
+      }
+    });
     getEvents();
   }
 
@@ -79,40 +95,21 @@ class _VideoAppState extends State<VideoApp> {
           body: Column(
             children: [
               SizedBox(
-                  height: MediaQuery.of(context).size.height / 2.5,
-                  width: MediaQuery.of(context).size.width,
-                  child: FutureBuilder(
-                      future: initializePlayer(),
-                      builder: (context, snapshot) {
-                        if (snapshot.connectionState == ConnectionState.done) {
-                          return AspectRatio(
-                            aspectRatio: _controller.value.aspectRatio,
-                            child: videoStream(),
-                          );
-                        } /*else if (snapshot.connectionState ==
-                            ConnectionState.waiting) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                  duration: Duration(seconds: 5),
-                                  content: Text(
-                                      'Actualizando...',
-                                      textAlign: TextAlign.center,
-                                      style: TextStyle(
-                                          color: Colors.white,
-                                          fontWeight: FontWeight.bold))));
-                          return Center();
-                        } */
-                        else {
-                          /*ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                              content: Text(
-                                  'Hubo un problema con la camara. Enciéndala y presione "Actualizar"',
-                                  textAlign: TextAlign.center,
-                                  style: TextStyle(
-                                      color: Colors.red,
-                                      fontWeight: FontWeight.bold))));*/
-                          return Center();
-                        }
-                      })),
+                height: MediaQuery.of(context).size.height / 2.5,
+                width: MediaQuery.of(context).size.width,
+                child: Stack(children: [
+                  !playing
+                      ? Center(
+                          child: CircularProgressIndicator(
+                          color: Colors.purple,
+                        ))
+                      : SizedBox(),
+                  VlcPlayer(
+                    controller: _controller,
+                    aspectRatio: _controller.value.aspectRatio,
+                  ),
+                ]),
+              ),
               Padding(
                 padding: const EdgeInsets.only(top: 15, left: 15, right: 15),
                 child: Row(
@@ -280,23 +277,6 @@ class _VideoAppState extends State<VideoApp> {
     var temp = await EventoHttpService().getEventos(token: LoginPage.token);
     setState(() {
       _list = temp;
-    });
-  }
-
-  /// Carga de streamming de video
-  Future<void> initializePlayer() async {
-    _controller = await VlcPlayerController.network(
-      shouldUsePublicUrls
-          ? VIDEO_STREAMING_URL_PUBLIC
-          : VIDEO_STREAMING_URL_TESTING,
-      hwAcc: HwAcc.full,
-      autoPlay: true,
-      options: VlcPlayerOptions(),
-    );
-    _controller.addListener(() {
-      setState(() {
-        playing = _controller.value.isPlaying;
-      });
     });
   }
 }
