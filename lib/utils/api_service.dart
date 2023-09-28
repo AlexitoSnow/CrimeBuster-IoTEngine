@@ -1,11 +1,11 @@
 import 'dart:convert';
 import 'dart:core';
 import 'dart:io';
-import 'package:crime_detections/pages/video_page.dart';
+import '../models/EventoModel.dart';
+import '../utils/constants.dart';
 import 'package:http/http.dart' as http;
-import 'package:crime_detections/models/EventoModel.dart';
-import 'package:crime_detections/utils/constants.dart';
 import 'package:path_provider/path_provider.dart';
+import '../pages/video_page.dart';
 
 class AuthHttpService {
   final String _baseUrl =

@@ -1,4 +1,4 @@
-name: crime_detections
+name: crime_buster
 description: Project for educational purposes, proposed by the IoT Engine team.
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
@@ -39,11 +39,12 @@ dependencies:
   flutter_vlc_player: ^7.3.1
   http: ^1.1.0
   path_provider: ^2.1.1
+  flutter_native_splash: ^2.3.2
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  flutter_launcher_icons: ^0.11.0
+  flutter_launcher_icons: 0.13.1
 
 flutter_icons:
   android: "launcher_icon"
@@ -97,3 +98,12 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/custom-fonts/#from-packages
+
+#Splash Native
+flutter_native_splash:
+  color: "#ffffff"
+  image: "assets/images/iconApp.png"
+
+  android_12:
+    image: "assets/images/iconApp.png"
+    color: "#ffffff"
