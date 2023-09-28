@@ -25,7 +25,7 @@ class VideoApp extends StatefulWidget {
 class _VideoAppState extends State<VideoApp> {
   late VlcPlayerController _controller;
   late List<EventoModel> _list = [];
-  bool _eventSelected = false;
+  bool playing = false;
 
   @override
   void initState() {
@@ -38,110 +38,6 @@ class _VideoAppState extends State<VideoApp> {
     await _controller.stopRendererScanning();
     await _controller.dispose();
     super.dispose();
-  }
-
-  void getEvents() async {
-    var temp = await EventoHttpService().getEventos(token: LoginPage.token);
-    setState(() {
-      _list = temp;
-    });
-  }
-
-  Future<void> initializePlayer() async {
-    _controller = await VlcPlayerController.network(
-      shouldUsePublicUrls
-          ? VIDEO_STREAMING_URL_PUBLIC
-          : VIDEO_STREAMING_URL_TESTING,
-      hwAcc: HwAcc.full,
-      autoPlay: true,
-      options: VlcPlayerOptions(),
-    );
-  }
-
-  Widget evento(var item) {
-    return Tooltip(
-      message: 'Reproducir evento',
-      child: ListTile(
-        title: Text(item.tipo),
-        subtitle: Text(subtitle(item.fecha)),
-        leading: const Icon(Icons.play_arrow_rounded),
-        selected: _eventSelected,
-        onTap: () async {
-          var temp = (await EventoHttpService()
-                      .getVideoFile(item.videoFileName, token: LoginPage.token))
-                  ?.path ??
-              '';
-          if (temp == '') {
-            ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Error al cargar el video')));
-            return;
-          } else {
-            setState(() {
-              //BUG: se seleccionan todos los eventos
-              _eventSelected = true;
-            });
-            showDialog(
-                context: context,
-                builder: (BuildContext context) {
-                  return SimpleDialog(
-                    title: Text('Mostrando ${item.tipo}'),
-                    children: [
-                      SizedBox(
-                        height: MediaQuery.of(context).size.height / 2.5,
-                        width: MediaQuery.of(context).size.width,
-                        child: VlcPlayer(
-                          controller: VlcPlayerController.file(
-                            File(temp),
-                            hwAcc: HwAcc.full,
-                            autoPlay: true,
-                          ),
-                          aspectRatio: 16 / 9,
-                        ),
-                      ),
-                      SimpleDialogOption(
-                          onPressed: () {
-                            Navigator.pop(context);
-                            setState(() {
-                              _eventSelected = false;
-                            });
-                          },
-                          child: const Text('Cerrar'))
-                    ],
-                  );
-                });
-          }
-        },
-      ),
-    );
-  }
-
-  Widget videoStream() {
-    try {
-      return VlcPlayer(
-          controller: _controller,
-          aspectRatio: 16 / 9,
-          placeholder: const Center(
-            child: CircularProgressIndicator(
-              color: Colors.purple,
-            ),
-          ));
-    } catch (e) {
-      print('Error');
-      return const Center(
-          child: Text(
-              'Hubo un problema con la camara. Enciéndala y presione "Actualizar"',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                  color: Colors.red,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 20)));
-    }
-  }
-
-  String subtitle(String subtitle) {
-    List<String> fechaYhora = subtitle.split('T');
-    var hora = fechaYhora[1].split('.')[0];
-    return "El ${fechaYhora[0]} a las ${hora}";
   }
 
   @override
@@ -171,44 +67,17 @@ class _VideoAppState extends State<VideoApp> {
               });
         },
         child: Scaffold(
-          floatingActionButton: FloatingActionButton(
-            onPressed: () async {
-              getEvents();
-              initializePlayer();
-              print('actualizando');
-            },
-            child: const Icon(Icons.refresh),
-            tooltip: 'Actualizar',
-          ),
           drawer: Drawer(
-              child: ListView(
-            children: [
-              DrawerHeader(
-                child: Column(
-                  children: <Widget>[
-                    Icon(Icons.account_circle, size: 100),
-                    Text(VideoApp.userName),
-                  ],
-                ),
-              ),
-              Divider(),
-              TextButton(
-                  onPressed: () {
-                    LoginPage.token = '';
-                    Navigator.pushNamed(context, LoginPage.routName);
-                  },
-                  child: Text('Cerrar Sesión'))
-            ],
-          )),
+              width: MediaQuery.of(context).size.width * 0.5,
+              child: _userPane()),
           appBar: AppBar(
             title: Text(widget.title),
             actions: [
               Image.asset('assets/images/logo.png', height: 50, width: 50)
             ],
           ),
-          body: ListView(
+          body: Column(
             children: [
-              const Padding(padding: EdgeInsets.only(top: 15)),
               SizedBox(
                   height: MediaQuery.of(context).size.height / 2.5,
                   width: MediaQuery.of(context).size.width,
@@ -216,28 +85,218 @@ class _VideoAppState extends State<VideoApp> {
                       future: initializePlayer(),
                       builder: (context, snapshot) {
                         if (snapshot.connectionState == ConnectionState.done) {
-                          print('done');
                           return AspectRatio(
                             aspectRatio: _controller.value.aspectRatio,
                             child: videoStream(),
                           );
-                        } else {
-                          return const Center(
-                            child: CircularProgressIndicator(
-                              color: Colors.purple,
-                            ),
-                          );
+                        } /*else if (snapshot.connectionState ==
+                            ConnectionState.waiting) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                  duration: Duration(seconds: 5),
+                                  content: Text(
+                                      'Actualizando...',
+                                      textAlign: TextAlign.center,
+                                      style: TextStyle(
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.bold))));
+                          return Center();
+                        } */
+                        else {
+                          /*ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                              content: Text(
+                                  'Hubo un problema con la camara. Enciéndala y presione "Actualizar"',
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                      color: Colors.red,
+                                      fontWeight: FontWeight.bold))));*/
+                          return Center();
                         }
                       })),
-              const Padding(padding: EdgeInsets.all(15)),
-              const Text('Eventos Detectados',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 25,
-                  )),
-              for (var item in _list) evento(item)
+              Padding(
+                padding: const EdgeInsets.only(top: 15, left: 15, right: 15),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text('Eventos Detectados',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 25,
+                        )),
+                    OutlinedButton(
+                        onPressed: getEvents,
+                        style: OutlinedButton.styleFrom(
+                          backgroundColor: Colors.transparent,
+                          foregroundColor: Colors.purple,
+                        ),
+                        child: Text('Actualizar')),
+                  ],
+                ),
+              ),
+              Flexible(
+                child: ListView.builder(
+                    itemCount: _list.length,
+                    itemBuilder: (BuildContext context, index) {
+                      return _eventItem(_list[index]);
+                    }),
+              )
             ],
           ),
         ));
+  }
+
+  /// Panel de usuario
+  Widget _userPane() {
+    return ListView(
+      children: [
+        DrawerHeader(
+          child: Column(
+            children: <Widget>[
+              Icon(Icons.account_circle, size: 100),
+              Text(VideoApp.userName),
+            ],
+          ),
+        ),
+        Divider(),
+        TextButton(
+            onPressed: () {
+              LoginPage.token = '';
+              Navigator.pushNamed(context, LoginPage.routName);
+            },
+            child: Text('Cerrar Sesión'))
+      ],
+    );
+  }
+
+  /// Eventos detectados
+  Widget _eventItem(var item) {
+    return Tooltip(
+      message: 'Reproducir evento',
+      child: ListTile(
+        title: Text(item.tipo),
+        subtitle: Text(subtitle(item.fecha)),
+        leading: const Icon(Icons.play_arrow_rounded),
+        onTap: () async {
+          var temp = (await EventoHttpService()
+                      .getVideoFile(item.videoFileName, token: LoginPage.token))
+                  ?.path ??
+              '';
+          if (temp == '') {
+            ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Error al cargar el video')));
+            return;
+          } else {
+            showDialog(
+                context: context,
+                builder: (BuildContext context) {
+                  return AlertDialog(
+                    title: RichText(
+                      text: TextSpan(
+                        children: <TextSpan>[
+                          TextSpan(
+                            text: 'Mostrando ${item.tipo}\n',
+                            style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: Colors.black),
+                          ),
+                          TextSpan(
+                            text: subtitle(item.fecha),
+                            style: TextStyle(
+                                fontStyle: FontStyle.italic,
+                                color: Colors.grey),
+                          ),
+                        ],
+                      ),
+                    ),
+                    content: SizedBox(
+                      child: VlcPlayer(
+                        controller: VlcPlayerController.file(
+                          File(temp),
+                          hwAcc: HwAcc.full,
+                          autoPlay: true,
+                        ),
+                        aspectRatio: 16 / 9,
+                      ),
+                    ),
+                    actions: [
+                      SimpleDialogOption(
+                          onPressed: () {
+                            Navigator.pop(context);
+                          },
+                          child: const Text('Cerrar'))
+                    ],
+                  );
+                });
+          }
+        },
+      ),
+    );
+  }
+
+  /// Streamming de video
+  Widget videoStream() {
+    try {
+      if (playing) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+            content: Text(
+                'Hubo un problema con la camara. Enciéndala y presione "Actualizar"',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                    color: Colors.red, fontWeight: FontWeight.bold))));
+        return Center(
+            child: CircularProgressIndicator(
+          color: Colors.purple,
+        ));
+      } else {
+        return VlcPlayer(
+          controller: _controller,
+          aspectRatio: 16 / 9,
+          placeholder: Center(
+              child: CircularProgressIndicator(
+            color: Colors.purple,
+          )),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text(
+              'Hubo un problema con la camara. Enciéndala y presione "Actualizar"',
+              textAlign: TextAlign.center,
+              style:
+                  TextStyle(color: Colors.red, fontWeight: FontWeight.bold))));
+      return Center();
+    }
+  }
+
+  /// Formateo de la fecha
+  String subtitle(String subtitle) {
+    List<String> fechaYhora = subtitle.split('T');
+    var hora = fechaYhora[1].split('.')[0];
+    return "El ${fechaYhora[0]} a las ${hora}";
+  }
+
+  /// Carga de eventos
+  Future<void> getEvents() async {
+    var temp = await EventoHttpService().getEventos(token: LoginPage.token);
+    setState(() {
+      _list = temp;
+    });
+  }
+
+  /// Carga de streamming de video
+  Future<void> initializePlayer() async {
+    _controller = await VlcPlayerController.network(
+      shouldUsePublicUrls
+          ? VIDEO_STREAMING_URL_PUBLIC
+          : VIDEO_STREAMING_URL_TESTING,
+      hwAcc: HwAcc.full,
+      autoPlay: true,
+      options: VlcPlayerOptions(),
+    );
+    _controller.addListener(() {
+      setState(() {
+        playing = _controller.value.isPlaying;
+      });
+    });
   }
 }

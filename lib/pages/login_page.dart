@@ -28,19 +28,27 @@ class _HomePage extends State<LoginPage> {
 
   Widget loginPage() {
     return Scaffold(
+      persistentFooterButtons: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Image.asset('assets/images/computer.png', width: 75, height: 75),
+            Image.asset('assets/images/niot.png', width: 60, height: 60),
+          ],
+        ),
+      ],
       body: Center(
         child: ListView(
+          padding: const EdgeInsets.symmetric(vertical: 25),
           children: [
             Padding(
               padding: EdgeInsets.only(top: 30, bottom: 30),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: <Widget>[
-                  Image.asset('assets/images/computer.png',
-                      width: 50, height: 50),
                   Image.asset('assets/images/iconApp.png',
-                      width: 100, height: 50),
-                  Image.asset('assets/images/niot.png', width: 50, height: 50),
+                      width: 150, height: 150),
                 ],
               ),
             ),
@@ -58,7 +66,7 @@ class _HomePage extends State<LoginPage> {
                       mainAxisAlignment: MainAxisAlignment.spaceAround,
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: _formulario()),
-                ),
+                )
               ],
             ),
           ],
@@ -164,6 +172,18 @@ class _HomePage extends State<LoginPage> {
           builder: (BuildContext context) => AlertDialog(
                 title: Text('Error'),
                 content: Text('Credenciales incorrectas'),
+                actions: [
+                  TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: Text('Aceptar'))
+                ],
+              ));
+    } else if (LoginPage.token == 'Falla inesperada') {
+      showDialog(
+          context: context,
+          builder: (BuildContext context) => AlertDialog(
+                title: Text('Error'),
+                content: Text('Falla inesperada'),
                 actions: [
                   TextButton(
                       onPressed: () => Navigator.pop(context),

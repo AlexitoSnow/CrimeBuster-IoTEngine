@@ -18,16 +18,20 @@ class AuthHttpService {
     request.body = json.encode({"email": email, "password": password});
     request.headers.addAll(headers);
 
-    http.StreamedResponse response = await request.send();
-    if (response.statusCode == 200) {
-      String responseBody = await response.stream.bytesToString();
-      Map<String, dynamic> jsonResponse = json.decode(responseBody);
-      String token = jsonResponse["token"].toString();
-      VideoApp.userName = jsonResponse["user"]["username"].toString();
-      return token;
-    } else {
-      return '';
-      //throw http.ClientException(response.reasonPhrase!);
+    try {
+      http.StreamedResponse response = await request.send();
+      if (response.statusCode == 200) {
+        String responseBody = await response.stream.bytesToString();
+        Map<String, dynamic> jsonResponse = json.decode(responseBody);
+        String token = jsonResponse["token"].toString();
+        VideoApp.userName = jsonResponse["user"]["username"].toString();
+        return token;
+      } else {
+        return '';
+        //throw http.ClientException(response.reasonPhrase!);
+      }
+    } catch (e) {
+      return 'Falla inesperada';
     }
   }
 }
