@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_vlc_player/flutter_vlc_player.dart';
+import 'package:path_provider/path_provider.dart';
 
 import '../models/EventoModel.dart';
 import '../utils/api_service.dart';
@@ -104,9 +105,11 @@ class _VideoAppState extends State<VideoApp> {
                           color: Colors.purple,
                         ))
                       : SizedBox(),
-                  VlcPlayer(
-                    controller: _controller,
-                    aspectRatio: _controller.value.aspectRatio,
+                  Center(
+                    child: VlcPlayer(
+                      controller: _controller,
+                      aspectRatio: _controller.value.aspectRatio,
+                    ),
                   ),
                 ]),
               ),
@@ -156,9 +159,16 @@ class _VideoAppState extends State<VideoApp> {
         ),
         Divider(),
         TextButton(
-            onPressed: () {
+            onPressed: () async {
+              final directory = await getApplicationSupportDirectory();
+              final credentialsFile =
+                  File('${directory.path}/credentials.json');
+              //eliminar el archivo file si existe
+              if (await credentialsFile.exists()) {
+                await credentialsFile.delete();
+              }
               LoginPage.token = '';
-              Navigator.pushNamed(context, LoginPage.routName);
+              Navigator.pushReplacementNamed(context, LoginPage.routName);
             },
             child: Text('Cerrar Sesión'))
       ],

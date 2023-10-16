@@ -1,7 +1,11 @@
+import 'dart:convert';
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 
 import '../utils/api_service.dart';
 import 'video_page.dart';
+import 'package:path_provider/path_provider.dart';
 
 class LoginPage extends StatefulWidget {
   final String? title;
@@ -24,6 +28,12 @@ class _HomePage extends State<LoginPage> {
   @override
   Widget build(BuildContext context) {
     return loginPage();
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _checkCredentials();
   }
 
   Widget loginPage() {
@@ -119,7 +129,9 @@ class _HomePage extends State<LoginPage> {
               ),
               controller: passwordController,
               obscureText: !seePassword,
-              onSubmitted: (_) => _login(),
+              onSubmitted: (_) => _login(
+                  email: emailController.text,
+                  password: passwordController.text),
             ),
           ],
         ),
@@ -146,7 +158,8 @@ class _HomePage extends State<LoginPage> {
         padding: const EdgeInsets.only(top: 30),
         child: Center(
           child: OutlinedButton(
-            onPressed: _login,
+            onPressed: () => _login(
+                email: emailController.text, password: passwordController.text),
             child: const Text(
               'Iniciar Sesión',
               style: TextStyle(fontWeight: FontWeight.bold),
@@ -163,9 +176,9 @@ class _HomePage extends State<LoginPage> {
     });
   }
 
-  void _login() async {
-    LoginPage.token = await AuthHttpService().getAPIToken(
-        email: emailController.text, password: passwordController.text);
+  void _login({required String email, required String password}) async {
+    LoginPage.token =
+        await AuthHttpService().getAPIToken(email: email, password: password);
     if (LoginPage.token == '') {
       showDialog(
           context: context,
@@ -191,11 +204,37 @@ class _HomePage extends State<LoginPage> {
                 ],
               ));
     } else {
-      Navigator.pushNamed(context, VideoApp.routName);
+      // Guardar credenciales en archivo si se seleccionó la opción de recordar
+      if (checked) {
+        final directory = await getApplicationSupportDirectory();
+        final credentialsFile =
+            await File('${directory.path}/credentials.json').create();
+        final credentials = jsonEncode({'email': email, 'password': password});
+        await credentialsFile.writeAsString(credentials);
+      }
+      Navigator.pushReplacementNamed(context, VideoApp.routName);
     }
   }
 
   void _lookAt() => setState(() {
         seePassword = !seePassword;
       });
+
+  Future<void> _checkCredentials() async {
+    //leer el archivo credentials.json para verificar si existen credenciales de inicio de sesión
+    final directory = await getApplicationSupportDirectory();
+    final credentialsFile = await File('${directory.path}/credentials.json');
+    if (await credentialsFile.exists()) {
+      print(credentialsFile.path);
+      final email = jsonDecode(await credentialsFile.readAsString())['email'];
+      final password =
+          jsonDecode(await credentialsFile.readAsString())['password'];
+      setState(() {
+        emailController.text = email;
+        passwordController.text = password;
+        checked = true;
+        _login(email: emailController.text, password: passwordController.text);
+      });
+    }
+  }
 }
